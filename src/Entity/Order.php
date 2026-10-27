@@ -20,7 +20,7 @@ class Order
 
     #[ORM\ManyToOne(inversedBy: 'orders')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Customer $customer = null;
+    private Customer $customer;
 
     #[ORM\Column(enumType: OrderStatus::class)]
     private ?OrderStatus $status = OrderStatus::New;
@@ -34,8 +34,9 @@ class Order
     #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'parentOrder', cascade: ['persist'], orphanRemoval: true)]
     private Collection $items;
 
-    public function __construct()
+    public function __construct(Customer $customer)
     {
+        $this->customer = $customer;
         $this->items = new ArrayCollection();
     }
 
@@ -44,12 +45,12 @@ class Order
         return $this->id;
     }
 
-    public function getCustomer(): ?Customer
+    public function getCustomer(): Customer
     {
         return $this->customer;
     }
 
-    public function setCustomer(?Customer $customer): static
+    public function setCustomer(Customer $customer): static
     {
         $this->customer = $customer;
 

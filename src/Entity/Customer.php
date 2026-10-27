@@ -31,9 +31,10 @@ class Customer
     #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'customer')]
     private Collection $orders;
 
-    public function __construct()
+    public function __construct(string $email, string $name)
     {
         $this->orders = new ArrayCollection();
+        $this->setEmail($email)->setName($name);
     }
 
     public function getId(): ?int
@@ -89,18 +90,6 @@ class Customer
         if (!$this->orders->contains($order)) {
             $this->orders->add($order);
             $order->setCustomer($this);
-        }
-
-        return $this;
-    }
-
-    public function removeOrder(Order $order): static
-    {
-        if ($this->orders->removeElement($order)) {
-            // set the owning side to null (unless already changed)
-            if ($order->getCustomer() === $this) {
-                $order->setCustomer(null);
-            }
         }
 
         return $this;
