@@ -92,8 +92,6 @@ class OrderRepository extends ServiceEntityRepository
         return $counts;
     }
 
-
-
     /**
      * A single number: total revenue in cents from paid and shipped orders.
      */

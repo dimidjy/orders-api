@@ -20,6 +20,6 @@ enum OrderStatus: string
 
     public function isFinal(): bool
     {
-        return $this === self::Shipped || $this === self::Cancelled;
+        return self::Shipped === $this || self::Cancelled === $this;
     }
 }

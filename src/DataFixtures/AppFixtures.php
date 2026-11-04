@@ -11,7 +11,7 @@ use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 
 /**
- * Test data for local development: php bin/console doctrine:fixtures:load
+ * Test data for local development: php bin/console doctrine:fixtures:load.
  */
 class AppFixtures extends Fixture
 {
