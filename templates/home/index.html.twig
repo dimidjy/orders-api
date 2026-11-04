@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Orders{% endblock %}
+
+{% block body %}
+    <h1>Orders</h1>
+
+    <p>
+        {{ orderCount }} orders in total.
+        Revenue from paid and shipped orders: <strong>${{ (revenue / 100)|number_format(2) }}</strong>
+    </p>
+
+    <ul>
+        {% for status, count in statusCounts %}
+            <li>{{ status }}: {{ count }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Latest {{ latestOrders|length }} orders</h2>
+    <table>
+        <thead>
+            <tr><th>#</th><th>Created</th><th>Customer</th><th>Status</th><th>Items</th><th>Total</th></tr>
+        </thead>
+        <tbody>
+            {% for order in latestOrders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.createdAt|date('Y-m-d H:i') }}</td>
+                    <td>{{ order.customer.name }}</td>
+                    <td>{{ order.status.value }}</td>
+                    <td>{{ order.items|length }}</td>
+                    <td>${{ (order.total / 100)|number_format(2) }}</td>
+                </tr>
+            {% else %}
+                <tr><td colspan="6">No orders yet. Load test data with <code>symfony console doctrine:fixtures:load</code>.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

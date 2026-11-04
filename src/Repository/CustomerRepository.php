@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Customer;
+use App\Enum\OrderStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,28 +17,53 @@ class CustomerRepository extends ServiceEntityRepository
         parent::__construct($registry, Customer::class);
     }
 
-//    /**
-//     * @return Customer[] Returns an array of Customer objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('c')
-//            ->andWhere('c.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('c.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    /**
+     * Built-in findOneBy() wrapped in a named method; normalizes input the same way Customer::setEmail() does.
+     */
+    public function findOneByEmail(string $email): ?Customer
+    {
+        return $this->findOneBy(['email' => mb_strtolower(trim($email))]);
+    }
 
-//    public function findOneBySomeField($value): ?Customer
-//    {
-//        return $this->createQueryBuilder('c')
-//            ->andWhere('c.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    /**
+     * LEFT JOIN + IS NULL: customers that have never placed an order.
+     *
+     * @return Customer[]
+     */
+    public function findWithoutOrders(): array
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.orders', 'o')
+            ->andWhere('o.id IS NULL')
+            ->orderBy('c.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Aggregates (SUM, COUNT) with GROUP BY: who spent the most on paid and shipped orders.
+     *
+     * @return list<array{customer: Customer, spent: int, orderCount: int}>
+     */
+    public function findTopSpenders(int $limit = 5): array
+    {
+        $rows = $this->createQueryBuilder('c')
+            ->select('c', 'SUM(i.quantity * i.unitPrice) AS spent', 'COUNT(DISTINCT o.id) AS orderCount')
+            ->join('c.orders', 'o')
+            ->join('o.items', 'i')
+            ->andWhere('o.status IN (:statuses)')
+            ->setParameter('statuses', [OrderStatus::Paid, OrderStatus::Shipped])
+            ->groupBy('c.id')
+            ->orderBy('spent', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        // Selecting an entity plus extra values gives rows like [0 => Customer, 'spent' => ..., 'orderCount' => ...].
+        return array_map(static fn (array $row): array => [
+            'customer' => $row[0],
+            'spent' => (int) $row['spent'],
+            'orderCount' => (int) $row['orderCount'],
+        ], $rows);
+    }
 }
