@@ -29,6 +29,10 @@ class Product
     #[ORM\Column(options: ['default' => 0])]
     private ?int $stock = 0;
 
+    #[ORM\Version]
+    #[ORM\Column(type: Types::INTEGER)]
+    private int $version = 1;
+
     public function __construct(string $sku, string $name, int $price)
     {
         $this->sku = $sku;
@@ -99,5 +103,13 @@ class Product
         $this->stock = $stock;
 
         return $this;
+    }
+
+    public function decreaseStock(int $qty): void
+    {
+        if ($qty > $this->stock) {
+            throw new \DomainException("Not enough stock for {$this->name}");
+        }
+        $this->stock -= $qty;
     }
 }
